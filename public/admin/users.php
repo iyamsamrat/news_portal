@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../app/core/auth.php';
 require_once __DIR__ . '/../../app/core/security.php';
 
 auth_start();
-auth_require_role(['admin']); // users/roles = admin only
+auth_require_role(['admin']);
 
 $pdo = db();
 $ADMIN_URL = rtrim(BASE_URL, '/') . '/admin';
@@ -62,23 +62,21 @@ $sql = "
   LIMIT :limit OFFSET :offset
 ";
 $st = $pdo->prepare($sql);
-foreach ($params as $k => $v) {
+foreach ($params as $k => $v)
     $st->bindValue(':' . $k, $v);
-}
 $st->bindValue(':limit', $perPage, PDO::PARAM_INT);
 $st->bindValue(':offset', $offset, PDO::PARAM_INT);
 $st->execute();
 $rows = $st->fetchAll() ?: [];
 
 // Admin count for safety banner
-$adminCount = 0;
-try {
-    $adminCount = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role='admin' AND is_active=1")->fetchColumn();
-} catch (Throwable $e) {
-    $adminCount = 0;
-}
+$adminCount = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role='admin' AND is_active=1")->fetchColumn();
 
-// Helper for pagination URLs
+// Flash: show temp password after reset/create (once)
+$tempNotice = $_SESSION['admin_temp_password_notice'] ?? null;
+if ($tempNotice)
+    unset($_SESSION['admin_temp_password_notice']);
+
 function build_url(array $overrides = []): string
 {
     $base = $_GET;
@@ -105,11 +103,25 @@ require_once __DIR__ . '/_partials/admin_nav.php';
             <div class="small text-muted">Manage accounts, roles, and access to the CMS.</div>
         </div>
         <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-sm btn-dark" href="<?= h($ADMIN_URL) ?>/user_create.php">
+                <i class="bi bi-person-plus"></i> Create User
+            </a>
             <a class="btn btn-sm btn-outline-dark" href="<?= h($ADMIN_URL) ?>/dashboard.php">
                 <i class="bi bi-grid"></i> Dashboard
             </a>
         </div>
     </div>
+
+    <?php if ($tempNotice): ?>
+        <div class="alert alert-success">
+            <div class="fw-semibold mb-1"><?= h($tempNotice['title'] ?? 'Temporary password created') ?></div>
+            <div class="small">
+                User: <strong><?= h($tempNotice['email'] ?? '') ?></strong><br>
+                Temporary Password: <strong><?= h($tempNotice['temp_password'] ?? '') ?></strong>
+            </div>
+            <div class="small text-muted mt-2">Copy it now. This message will not be shown again.</div>
+        </div>
+    <?php endif; ?>
 
     <?php if ($adminCount <= 1): ?>
         <div class="alert alert-warning">
@@ -150,9 +162,7 @@ require_once __DIR__ . '/_partials/admin_nav.php';
         </form>
     </div>
 
-    <div class="small text-muted mb-2">
-        <?= (int) $total ?> user(s)
-    </div>
+    <div class="small text-muted mb-2"><?= (int) $total ?> user(s)</div>
 
     <!-- Table -->
     <div class="np-card p-0 bg-white overflow-hidden">
@@ -165,7 +175,7 @@ require_once __DIR__ . '/_partials/admin_nav.php';
                         <th style="width:160px;">Role</th>
                         <th style="width:130px;">Active</th>
                         <th style="width:170px;">Created</th>
-                        <th style="width:360px;" class="text-end">Actions</th>
+                        <th style="width:420px;" class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -179,6 +189,7 @@ require_once __DIR__ . '/_partials/admin_nav.php';
                             $uid = (int) $u['id'];
                             $uRole = (string) ($u['role'] ?? 'user');
                             $uActive = (int) ($u['is_active'] ?? 1);
+
                             $roleBadge = 'text-bg-light border';
                             if ($uRole === 'admin')
                                 $roleBadge = 'text-bg-dark';
@@ -186,27 +197,14 @@ require_once __DIR__ . '/_partials/admin_nav.php';
                                 $roleBadge = 'text-bg-primary';
                             ?>
                             <tr>
-                                <td class="text-muted">
-                                    <?= $i + 1 ?>
-                                </td>
+                                <td class="text-muted"><?= $i + 1 ?></td>
 
                                 <td>
-                                    <div class="fw-semibold">
-                                        <?= h((string) $u['name']) ?>
-                                    </div>
-                                    <div class="small text-muted">
-                                        <?= h((string) $u['email']) ?>
-                                    </div>
-                                    <div class="small text-muted">ID:
-                                        <?= $uid ?>
-                                    </div>
+                                    <div class="fw-semibold"><?= h((string) $u['name']) ?></div>
+                                    <div class="small text-muted"><?= h((string) $u['email']) ?></div>
                                 </td>
 
-                                <td>
-                                    <span class="badge <?= h($roleBadge) ?>">
-                                        <?= h(ucfirst($uRole)) ?>
-                                    </span>
-                                </td>
+                                <td><span class="badge <?= h($roleBadge) ?>"><?= h(ucfirst($uRole)) ?></span></td>
 
                                 <td>
                                     <?php if ($uActive === 1): ?>
@@ -222,6 +220,11 @@ require_once __DIR__ . '/_partials/admin_nav.php';
 
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+
+                                        <a class="btn btn-sm btn-outline-dark"
+                                            href="<?= h($ADMIN_URL) ?>/user_view.php?id=<?= $uid ?>">
+                                            View
+                                        </a>
 
                                         <!-- Change role -->
                                         <form method="post" action="<?= h($ADMIN_URL) ?>/user_action.php"
@@ -255,6 +258,17 @@ require_once __DIR__ . '/_partials/admin_nav.php';
                                             <?php endif; ?>
                                         </form>
 
+                                        <!-- Reset password -->
+                                        <form method="post" action="<?= h($ADMIN_URL) ?>/user_action.php" class="d-inline"
+                                            onsubmit="return confirm('Generate a new temporary password for this user?');">
+                                            <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+                                            <input type="hidden" name="id" value="<?= $uid ?>">
+                                            <input type="hidden" name="action" value="reset_password">
+                                            <input type="hidden" name="back"
+                                                value="<?= h($_SERVER['REQUEST_URI'] ?? ($ADMIN_URL . '/users.php')) ?>">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Reset Password</button>
+                                        </form>
+
                                     </div>
                                 </td>
                             </tr>
@@ -273,10 +287,7 @@ require_once __DIR__ . '/_partials/admin_nav.php';
                 <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
                     <a class="page-link" href="<?= h(build_url(['page' => $prev])) ?>">Prev</a>
                 </li>
-                <li class="page-item disabled"><span class="page-link">
-                        <?= $page ?> /
-                        <?= $totalPages ?>
-                    </span></li>
+                <li class="page-item disabled"><span class="page-link"><?= $page ?> / <?= $totalPages ?></span></li>
                 <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
                     <a class="page-link" href="<?= h(build_url(['page' => $next])) ?>">Next</a>
                 </li>

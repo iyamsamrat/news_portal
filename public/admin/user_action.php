@@ -24,13 +24,12 @@ if ($id <= 0) {
 
 function active_admin_count(PDO $pdo): int
 {
-    $st = $pdo->query("SELECT COUNT(*) FROM users WHERE role='admin' AND is_active=1");
-    return (int) $st->fetchColumn();
+    return (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role='admin' AND is_active=1")->fetchColumn();
 }
 
 function get_user(PDO $pdo, int $id): ?array
 {
-    $st = $pdo->prepare("SELECT id, role, is_active FROM users WHERE id=:id LIMIT 1");
+    $st = $pdo->prepare("SELECT id, name, email, role, is_active FROM users WHERE id=:id LIMIT 1");
     $st->execute(['id' => $id]);
     $u = $st->fetch();
     return $u ?: null;
@@ -62,6 +61,7 @@ if ($action === 'toggle_active') {
 } elseif ($action === 'set_role') {
     $newRole = trim((string) ($_POST['role'] ?? ''));
     $allowed = ['user', 'editor', 'admin'];
+
     if (!in_array($newRole, $allowed, true)) {
         header('Location: ' . $back);
         exit;
@@ -77,6 +77,22 @@ if ($action === 'toggle_active') {
 
     $st = $pdo->prepare("UPDATE users SET role=:r WHERE id=:id LIMIT 1");
     $st->execute(['r' => $newRole, 'id' => $id]);
+
+} elseif ($action === 'reset_password') {
+
+    // Safety: allow resetting password for anyone
+    $tempPassword = bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(2));
+    $hash = password_hash($tempPassword, PASSWORD_DEFAULT);
+
+    $st = $pdo->prepare("UPDATE users SET password_hash=:p WHERE id=:id LIMIT 1");
+    $st->execute(['p' => $hash, 'id' => $id]);
+
+    // Flash once in users.php
+    $_SESSION['admin_temp_password_notice'] = [
+        'title' => 'Temporary password generated',
+        'email' => (string) ($target['email'] ?? ''),
+        'temp_password' => $tempPassword
+    ];
 }
 
 header('Location: ' . $back);
