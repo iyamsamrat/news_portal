@@ -1,0 +1,53 @@
+/* Header */
+.np-header {
+    backdrop-filter: saturate(180%) blur(8px);
+}
+
+.np-brand-mark {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+    background: #111;
+    color: #fff;
+    font-size: 12px;
+    letter-spacing: .08em;
+}
+
+/* Category bar: scrollable row */
+.np-catbar-scroll {
+    display: flex;
+    gap: .5rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+.np-catbar-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.np-catbar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, .18);
+    border-radius: 8px;
+}
+
+.np-catlink {
+    display: inline-flex;
+    align-items: center;
+    padding: .35rem .6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, .10);
+    background: rgba(0, 0, 0, .02);
+    color: rgba(0, 0, 0, .75);
+    text-decoration: none;
+    white-space: nowrap;
+    font-size: .9rem;
+}
+
+.np-catlink:hover {
+    background: rgba(0, 0, 0, .05);
+    color: rgba(0, 0, 0, .90);
+}
