@@ -22,9 +22,8 @@ $sort = trim((string) ($_GET['sort'] ?? 'latest'));
 $page = max(1, (int) ($_GET['page'] ?? 1));
 
 $allowedSort = ['latest', 'popular'];
-if (!in_array($sort, $allowedSort, true)) {
+if (!in_array($sort, $allowedSort, true))
     $sort = 'latest';
-}
 
 $perPage = 12;
 $offset = ($page - 1) * $perPage;
@@ -39,8 +38,6 @@ if ($catSlug !== '') {
     $joins .= " INNER JOIN categories c ON c.id = a.category_id ";
     $where .= " AND c.slug = :cat ";
     $params['cat'] = $catSlug;
-} else {
-    // Still want category fields in select -> left join later
 }
 
 // Tag filter
@@ -61,19 +58,24 @@ if ($q !== '') {
     $params['q'] = '%' . $q . '%';
 }
 
+// Popularity join (views)
+$viewsJoin = " LEFT JOIN (
+    SELECT article_id, COUNT(*) AS view_count
+    FROM article_views
+    GROUP BY article_id
+) v ON v.article_id = a.id ";
+
 // Sorting
-// Uses article_stats.view_count if you have it; otherwise falls back to 0.
 $orderBy = " ORDER BY a.published_at DESC, a.id DESC ";
 if ($sort === 'popular') {
-    $orderBy = " ORDER BY COALESCE(s.view_count, 0) DESC, a.published_at DESC, a.id DESC ";
+    $orderBy = " ORDER BY COALESCE(v.view_count, 0) DESC, a.published_at DESC, a.id DESC ";
 }
 
-// Count query (DISTINCT to avoid duplicates when joining tags)
+// Count query (DISTINCT to avoid duplicates with tags join)
 $countSql = "
     SELECT COUNT(DISTINCT a.id)
     FROM articles a
     $joins
-    LEFT JOIN article_stats s ON s.article_id = a.id
     $where
 ";
 $countStmt = $pdo->prepare($countSql);
@@ -87,11 +89,11 @@ $dataSql = "
         a.id, a.title, a.slug, a.summary, a.cover_image, a.published_at,
         a.category_id,
         c2.name AS category_name, c2.slug AS category_slug,
-        COALESCE(s.view_count, 0) AS view_count
+        COALESCE(v.view_count, 0) AS view_count
     FROM articles a
     $joins
     LEFT JOIN categories c2 ON c2.id = a.category_id
-    LEFT JOIN article_stats s ON s.article_id = a.id
+    $viewsJoin
     $where
     $orderBy
     LIMIT :limit OFFSET :offset
@@ -100,17 +102,16 @@ $dataSql = "
 $dataStmt = $pdo->prepare($dataSql);
 
 // bind normal params
-foreach ($params as $k => $v) {
-    $dataStmt->bindValue(':' . $k, $v);
+foreach ($params as $k => $v0) {
+    $dataStmt->bindValue(':' . $k, $v0);
 }
-// bind paging params as integers
 $dataStmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
 $dataStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 
 $dataStmt->execute();
 $articles = $dataStmt->fetchAll() ?: [];
 
-// For headline display
+// Headline
 $filtersTitleParts = [];
 if ($q !== '')
     $filtersTitleParts[] = 'Search: "' . $q . '"';
@@ -126,7 +127,6 @@ $pageTitle = implode(' • ', $filtersTitleParts) . ' - ' . APP_NAME;
 require_once __DIR__ . '/../app/views/partials/header.php';
 require_once __DIR__ . '/../app/views/partials/navbar.php';
 
-// helper for pagination links preserving current filters
 function build_query_url(array $overrides = []): string
 {
     $base = $_GET;
@@ -155,13 +155,10 @@ function build_query_url(array $overrides = []): string
 
         <div class="d-flex gap-2 flex-wrap">
             <a class="btn btn-sm <?= $sort === 'latest' ? 'btn-dark' : 'btn-outline-dark' ?>"
-                href="<?= h(build_query_url(['sort' => 'latest', 'page' => 1])) ?>">
-                Latest
-            </a>
+                href="<?= h(build_query_url(['sort' => 'latest', 'page' => 1])) ?>">Latest</a>
+
             <a class="btn btn-sm <?= $sort === 'popular' ? 'btn-dark' : 'btn-outline-dark' ?>"
-                href="<?= h(build_query_url(['sort' => 'popular', 'page' => 1])) ?>">
-                Popular
-            </a>
+                href="<?= h(build_query_url(['sort' => 'popular', 'page' => 1])) ?>">Popular</a>
 
             <?php if ($q !== '' || $catSlug !== '' || $tagSlug !== ''): ?>
                 <a class="btn btn-sm btn-outline-dark" href="<?= h(BASE_URL) ?>/search.php">Clear</a>
@@ -169,17 +166,12 @@ function build_query_url(array $overrides = []): string
         </div>
     </div>
 
-    <!-- Filter summary chips -->
     <div class="d-flex flex-wrap gap-2 mb-3">
-        <?php if ($q !== ''): ?>
-            <span class="badge text-bg-light border">q: <?= h($q) ?></span>
-        <?php endif; ?>
-        <?php if ($catSlug !== ''): ?>
-            <span class="badge text-bg-light border">category: <?= h($catSlug) ?></span>
-        <?php endif; ?>
-        <?php if ($tagSlug !== ''): ?>
-            <span class="badge text-bg-light border">tag: #<?= h($tagSlug) ?></span>
-        <?php endif; ?>
+        <?php if ($q !== ''): ?><span class="badge text-bg-light border">q: <?= h($q) ?></span><?php endif; ?>
+        <?php if ($catSlug !== ''): ?><span class="badge text-bg-light border">category:
+                <?= h($catSlug) ?></span><?php endif; ?>
+        <?php if ($tagSlug !== ''): ?><span class="badge text-bg-light border">tag:
+                #<?= h($tagSlug) ?></span><?php endif; ?>
     </div>
 
     <?php if (empty($articles)): ?>
@@ -240,22 +232,17 @@ function build_query_url(array $overrides = []): string
             <?php endforeach; ?>
         </div>
 
-        <!-- Pagination -->
         <?php if ($totalPages > 1): ?>
             <nav class="mt-4" aria-label="Search pagination">
                 <ul class="pagination pagination-sm flex-wrap">
-
-                    <?php
-                    $prev = max(1, $page - 1);
-                    $next = min($totalPages, $page + 1);
-                    ?>
+                    <?php $prev = max(1, $page - 1);
+                    $next = min($totalPages, $page + 1); ?>
 
                     <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
                         <a class="page-link" href="<?= h(build_query_url(['page' => $prev])) ?>">Prev</a>
                     </li>
 
                     <?php
-                    // show up to ~7 page links
                     $start = max(1, $page - 3);
                     $end = min($totalPages, $page + 3);
                     if ($start > 1) {
@@ -282,7 +269,6 @@ function build_query_url(array $overrides = []): string
         <?php endif; ?>
 
     <?php endif; ?>
-
 </main>
 
 <?php require_once __DIR__ . '/../app/views/partials/footer.php'; ?>
