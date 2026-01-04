@@ -85,4 +85,18 @@ final class Article
         $stmt->execute(['article_id' => $articleId]);
         return (int) $stmt->fetchColumn();
     }
+    public static function getTags(int $articleId): array
+    {
+        $pdo = db();
+        $st = $pdo->prepare("
+        SELECT t.id, t.name, t.slug
+        FROM tags t
+        INNER JOIN article_tags atg ON atg.tag_id = t.id
+        WHERE atg.article_id = :aid
+        ORDER BY t.name ASC
+    ");
+        $st->execute(['aid' => $articleId]);
+        return $st->fetchAll() ?: [];
+    }
+
 }
