@@ -1,0 +1,161 @@
+[05-Jan-2026 03:46:07 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:46:09 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:46:10 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:46:16 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:46:39 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:46:40 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:46:40 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:46:40 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:46:40 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:48:06 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.summary' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:48:07 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.summary' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:48:07 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.summary' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:48:08 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.summary' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:48:08 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.summary' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:48:09 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.summary' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:48:09 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.summary' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 03:54:36 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.summary' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:10:31 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:10:33 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:10:33 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:10:34 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:10:34 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:10:34 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:10:39 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:12:28 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:12:52 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:13:54 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:16:42 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news/public/index.php on line 69
+[05-Jan-2026 04:17:38 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news_portal/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/index.php on line 69
+[05-Jan-2026 04:20:13 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eastpol1_news_portal.articles' doesn't exist in /home/eastpol1/samratkatwal.com.np/news_portal/public/index.php:69
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/index.php(69): PDO->prepare('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/index.php on line 69
+[05-Jan-2026 05:32:14 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'updated_at' in 'UPDATE' in /home/eastpol1/samratkatwal.com.np/news_portal/app/models/Rating.php:23
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/app/models/Rating.php(23): PDO->prepare('\r\n            I...')
+#1 /home/eastpol1/samratkatwal.com.np/news_portal/public/rate_article.php(24): Rating::upsert(3, 12, 4)
+#2 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/app/models/Rating.php on line 23
+[05-Jan-2026 05:41:19 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in /home/eastpol1/samratkatwal.com.np/news_portal/public/search.php:82
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/search.php(82): PDOStatement->execute(Array)
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/search.php on line 82

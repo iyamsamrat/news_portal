@@ -1,0 +1,65 @@
+[05-Jan-2026 04:49:12 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.sort_order' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php:40
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php(40): PDO->query('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php on line 40
+[05-Jan-2026 04:49:15 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.sort_order' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php:40
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php(40): PDO->query('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php on line 40
+[05-Jan-2026 04:49:18 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.created_at' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php:73
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php(73): PDO->prepare('\r\n      SELECT\r...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php on line 73
+[05-Jan-2026 04:49:28 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.sort_order' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php:40
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php(40): PDO->query('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php on line 40
+[05-Jan-2026 04:49:32 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.created_at' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php:73
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php(73): PDO->prepare('\r\n      SELECT\r...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php on line 73
+[05-Jan-2026 04:49:46 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.created_at' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php:73
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php(73): PDO->prepare('\r\n      SELECT\r...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php on line 73
+[05-Jan-2026 04:52:40 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.created_at' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php:73
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php(73): PDO->prepare('\r\n      SELECT\r...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/tags.php on line 73
+[05-Jan-2026 04:52:43 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.sort_order' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php:40
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php(40): PDO->query('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php on line 40
+[05-Jan-2026 04:56:49 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.sort_order' in 'SELECT' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php:40
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php(40): PDO->query('\r\n    SELECT\r\n ...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/categories.php on line 40
+[05-Jan-2026 05:15:21 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'source_name' in 'INSERT INTO' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/article_save.php:274
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/article_save.php(274): PDO->prepare('\r\n        INSER...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/article_save.php on line 274
+[05-Jan-2026 05:17:22 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'media_type' in 'INSERT INTO' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/article_save.php:274
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/article_save.php(274): PDO->prepare('\r\n        INSER...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/article_save.php on line 274
+[05-Jan-2026 05:23:08 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'description' in 'INSERT INTO' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/category_save.php:98
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/category_save.php(98): PDO->prepare('\r\n        INSER...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/category_save.php on line 98
+[05-Jan-2026 05:34:57 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'updated_at' in 'SET' in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/comment_action.php:30
+Stack trace:
+#0 /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/comment_action.php(30): PDO->prepare('UPDATE comments...')
+#1 {main}
+  thrown in /home/eastpol1/samratkatwal.com.np/news_portal/public/admin/comment_action.php on line 30
