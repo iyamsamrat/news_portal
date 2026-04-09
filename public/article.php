@@ -64,8 +64,18 @@ if ($user) {
     $userRating = Rating::getUserRating((int) $user['id'], (int) $article['id']);
 }
 
-// Approved comments to display
-$approvedComments = Comment::listApprovedForArticle((int) $article['id'], 60);
+// Approved comments — paginated
+$commentsPerPage   = 10;
+$cpage             = max(1, (int) ($_GET['cpage'] ?? 1));
+$totalComments     = $commentsCount; // already fetched above (approved only)
+$totalCPages       = max(1, (int) ceil($totalComments / $commentsPerPage));
+$cpage             = min($cpage, $totalCPages);
+$commentOffset     = ($cpage - 1) * $commentsPerPage;
+$approvedComments  = Comment::listApprovedForArticle(
+    (int) $article['id'],
+    $commentsPerPage,
+    $commentOffset
+);
 
 $pageTitle = $article['title'] . " - " . APP_NAME;
 
@@ -81,42 +91,52 @@ function h(?string $v): string
 <main id="main" class="container my-4" style="max-width: 900px;">
     <article class="np-card p-4 p-md-5">
 
-        <div class="d-flex flex-column gap-2 mb-3">
-            <div class="d-flex flex-wrap gap-2 align-items-center">
+        <!-- Article header -->
+        <?php
+        $catSlugA = (string) ($article['category_slug'] ?? '');
+        $catNameA = $article['category_name'] ?? 'General';
+        ?>
+        <?php if ($catSlugA !== ''): ?>
+            <a class="np-article-cat"
+               href="<?= h(BASE_URL) ?>/search.php?category=<?= urlencode($catSlugA) ?>">
+                <?= h($catNameA) ?>
+            </a>
+        <?php else: ?>
+            <span class="np-article-cat"><?= h($catNameA) ?></span>
+        <?php endif; ?>
 
-                <a class="badge text-bg-light border text-decoration-none"
-                    href="<?= h(BASE_URL) ?>/search.php?category=<?= urlencode((string) ($article['category_slug'] ?? '')) ?>">
-                    <?= h($article['category_name'] ?? 'General') ?>
-                </a>
+        <h1 class="np-article-title"><?= h($article['title']) ?></h1>
 
-                <span class="text-muted small">
-                    <?= $article['published_at'] ? h(date('M d, Y', strtotime((string) $article['published_at']))) : '' ?>
-                </span>
+        <?php if (!empty($article['summary'])): ?>
+            <p style="font-size:1.05rem; color:#555; line-height:1.65; margin-bottom:20px;">
+                <?= h($article['summary']) ?>
+            </p>
+        <?php endif; ?>
 
-                <span class="text-muted small">•</span>
-
-                <span class="text-muted small">
-                    Rating: <?= number_format((float) $ratingStats['avg_rating'], 1) ?>
-                    (<?= (int) $ratingStats['ratings_count'] ?>)
-                </span>
-
-                <span class="text-muted small">•</span>
-
-                <span class="text-muted small">
-                    <?= (int) $commentsCount ?> comments
-                </span>
-            </div>
-
-            <h1 class="h3 np-title mb-0"><?= h($article['title']) ?></h1>
-
-            <?php if (!empty($article['summary'])): ?>
-                <p class="lead text-muted mb-0"><?= h($article['summary']) ?></p>
+        <div class="np-article-meta">
+            <?php if (!empty($article['author_name'])): ?>
+                <span><i class="bi bi-person me-1"></i><?= h($article['author_name']) ?></span>
             <?php endif; ?>
-
-            <div class="small text-muted">
-                <?= !empty($article['author_name']) ? 'By ' . h($article['author_name']) : '' ?>
-                <?= !empty($article['source_name']) ? ' • Source: ' . h($article['source_name']) : '' ?>
-            </div>
+            <?php if ($article['published_at']): ?>
+                <span><i class="bi bi-calendar3 me-1"></i>
+                    <?= h(date('F j, Y', strtotime((string) $article['published_at']))) ?>
+                </span>
+            <?php endif; ?>
+            <span><i class="bi bi-star me-1"></i>
+                <?= number_format((float) $ratingStats['avg_rating'], 1) ?>
+                (<?= (int) $ratingStats['ratings_count'] ?>)
+            </span>
+            <span><i class="bi bi-chat me-1"></i><?= (int) $commentsCount ?> comments</span>
+            <?php if (!empty($article['sentiment_label'])): ?>
+                <?php
+                $sl  = $article['sentiment_label'];
+                $sIc = $sl === 'positive' ? 'bi-emoji-smile' : ($sl === 'negative' ? 'bi-emoji-frown' : 'bi-emoji-neutral');
+                $sCl = $sl === 'positive' ? 'text-bg-success' : ($sl === 'negative' ? 'text-bg-danger' : 'text-bg-secondary');
+                ?>
+                <span class="badge <?= $sCl ?> d-inline-flex align-items-center gap-1">
+                    <i class="bi <?= $sIc ?>"></i><?= ucfirst($sl) ?>
+                </span>
+            <?php endif; ?>
         </div>
 
         <?php if (!empty($article['cover_image'])): ?>
@@ -137,13 +157,12 @@ function h(?string $v): string
             </div>
         <?php endif; ?>
 
-        <div class="content text-body">
+        <div class="np-prose">
             <?php
             $paras = preg_split("/\R\R+/", (string) $article['content']);
             foreach ($paras as $p) {
                 $p = trim($p);
-                if ($p === '')
-                    continue;
+                if ($p === '') continue;
                 echo '<p>' . nl2br(h($p)) . '</p>';
             }
             ?>
@@ -243,22 +262,63 @@ function h(?string $v): string
                 </div>
             <?php endif; ?>
 
-            <?php if (empty($approvedComments)): ?>
-                <div class="np-card p-3 text-muted">No comments yet.</div>
+            <?php if (empty($approvedComments) && $cpage === 1): ?>
+                <div class="np-card p-3 text-muted">No comments yet. Be the first!</div>
             <?php else: ?>
-                <div class="d-flex flex-column gap-2">
+                <div class="d-flex flex-column gap-2 mb-3">
                     <?php foreach ($approvedComments as $c): ?>
+                        <?php
+                        $csl    = $c['sentiment_label'] ?? null;
+                        $cIcon  = $csl === 'positive' ? 'bi-emoji-smile' : ($csl === 'negative' ? 'bi-emoji-frown' : 'bi-emoji-neutral');
+                        $cClass = $csl === 'positive' ? 'text-bg-success' : ($csl === 'negative' ? 'text-bg-danger' : 'text-bg-secondary');
+                        ?>
                         <div class="np-card p-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="fw-semibold"><?= h($c['user_name']) ?></div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fw-semibold"><?= h($c['user_name']) ?></span>
+                                    <?php if ($csl): ?>
+                                        <span class="badge <?= $cClass ?> d-inline-flex align-items-center gap-1" style="font-size:.7rem;">
+                                            <i class="bi <?= $cIcon ?>"></i> <?= ucfirst($csl) ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="small text-muted">
                                     <?= h(date('M d, Y H:i', strtotime((string) $c['created_at']))) ?>
                                 </div>
                             </div>
-                            <div class="mt-2"><?= nl2br(h($c['comment'])) ?></div>
+                            <div><?= nl2br(h($c['comment'])) ?></div>
                         </div>
                     <?php endforeach; ?>
                 </div>
+
+                <?php if ($totalCPages > 1): ?>
+                    <?php
+                    $cpUrl = function (int $p) use ($slug): string {
+                        $params = ['slug' => $slug];
+                        if ($p > 1) $params['cpage'] = $p;
+                        return '?' . http_build_query($params) . '#comments';
+                    };
+                    ?>
+                    <nav class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-1">
+                        <div class="small text-muted">
+                            Page <?= $cpage ?> of <?= $totalCPages ?>
+                            &nbsp;·&nbsp; <?= $totalComments ?> comment<?= $totalComments !== 1 ? 's' : '' ?>
+                        </div>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item <?= $cpage <= 1 ? 'disabled' : '' ?>">
+                                <a class="page-link" href="<?= $cpage > 1 ? h($cpUrl($cpage - 1)) : '#' ?>">‹</a>
+                            </li>
+                            <?php for ($cp = 1; $cp <= $totalCPages; $cp++): ?>
+                                <li class="page-item <?= $cp === $cpage ? 'active' : '' ?>">
+                                    <a class="page-link" href="<?= h($cpUrl($cp)) ?>"><?= $cp ?></a>
+                                </li>
+                            <?php endfor; ?>
+                            <li class="page-item <?= $cpage >= $totalCPages ? 'disabled' : '' ?>">
+                                <a class="page-link" href="<?= $cpage < $totalCPages ? h($cpUrl($cpage + 1)) : '#' ?>">›</a>
+                            </li>
+                        </ul>
+                    </nav>
+                <?php endif; ?>
             <?php endif; ?>
         </section>
 

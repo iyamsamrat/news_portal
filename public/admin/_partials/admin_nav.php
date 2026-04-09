@@ -57,6 +57,10 @@ function isActive(string $file, string $current): string
             <i class="bi bi-person"></i> Users & Roles
         </a>
 
+        <a class="admin-link <?= isActive('sentiment.php', $current) ?>" href="sentiment.php">
+            <i class="bi bi-bar-chart-line"></i> Sentiment
+        </a>
+
         <a class="admin-link <?= isActive('settings.php', $current) ?>" href="settings.php">
             <i class="bi bi-gear"></i> Settings
         </a>
@@ -113,6 +117,10 @@ function isActive(string $file, string $current): string
                 <a class="admin-link <?= isActive('tags.php', $current) ?>" href="tags.php">
                     <i class="bi bi-hash"></i> Tags
                 </a>
+                <a class="admin-link <?= isActive('sentiment.php', $current) ?>" href="sentiment.php">
+                    <i class="bi bi-bar-chart-line"></i> Sentiment
+                </a>
+
                 <a class="admin-link <?= isActive('settings.php', $current) ?>" href="settings.php">
                     <i class="bi bi-gear"></i> Settings
                 </a>

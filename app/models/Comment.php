@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/Sentiment.php';
 
 final class Comment
 {
@@ -51,23 +52,31 @@ final class Comment
             'c' => $comment,
             's' => $status,
         ]);
+
+        // Run sentiment analysis and persist the score + label
+        $newId = (int) $pdo->lastInsertId();
+        if ($newId > 0) {
+            Sentiment::analyseAndStoreComment($newId, $comment);
+        }
     }
 
-    public static function listApprovedForArticle(int $articleId, int $limit = 50): array
+    public static function listApprovedForArticle(int $articleId, int $limit = 10, int $offset = 0): array
     {
         $pdo = db();
         $stmt = $pdo->prepare("
             SELECT
               c.id, c.comment, c.created_at,
+              c.sentiment_score, c.sentiment_label,
               u.name AS user_name
             FROM comments c
             INNER JOIN users u ON u.id = c.user_id
             WHERE c.article_id = :a AND c.status = 'approved'
             ORDER BY c.created_at DESC
-            LIMIT :lim
+            LIMIT :lim OFFSET :off
         ");
-        $stmt->bindValue(':a', $articleId, PDO::PARAM_INT);
-        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':a',   $articleId, PDO::PARAM_INT);
+        $stmt->bindValue(':lim', $limit,     PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset,    PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }

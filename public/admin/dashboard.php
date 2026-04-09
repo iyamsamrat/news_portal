@@ -9,6 +9,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/config/db.php';
 require_once __DIR__ . '/../../app/core/auth.php';
+require_once __DIR__ . '/../../app/models/Sentiment.php';
 
 auth_start();
 auth_require_role(['admin', 'editor']);
@@ -57,11 +58,15 @@ $trending = fetchAllSafe($pdo, "
     SELECT a.title, a.slug, COUNT(v.id) AS views_7d
     FROM article_views v
     INNER JOIN articles a ON a.id = v.article_id
-    WHERE v.viewed_at >= (NOW() - INTERVAL 7 DAY)
+    WHERE v.created_at >= (NOW() - INTERVAL 7 DAY)
     GROUP BY a.id
     ORDER BY views_7d DESC
     LIMIT 6
 ");
+
+// Sentiment breakdown for comments
+$commentSentiment = Sentiment::getBreakdown('comments');
+$articleSentiment = Sentiment::getBreakdown('articles');
 
 // Latest drafts
 $latestDrafts = fetchAllSafe($pdo, "
@@ -277,6 +282,80 @@ require_once __DIR__ . '/_partials/admin_nav.php';
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Sentiment Analysis Overview -->
+        <div class="col-12">
+            <div class="np-card p-3 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="fw-semibold">
+                        <i class="bi bi-bar-chart-line me-1"></i> Sentiment Analysis Overview
+                    </div>
+                    <a class="btn btn-sm btn-outline-dark" href="<?= h($ADMIN_URL) ?>/sentiment.php">
+                        <i class="bi bi-arrow-right me-1"></i>View Details
+                    </a>
+                </div>
+                <?php if (!empty($_GET['sentiment_done'])): ?>
+                <div class="alert alert-success alert-dismissible fade show py-2 mb-3" role="alert">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Sentiment re-scored: <strong><?= (int) ($_GET['a'] ?? 0) ?></strong> articles,
+                    <strong><?= (int) ($_GET['c'] ?? 0) ?></strong> comments.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($_GET['sentiment_error'])): ?>
+                <div class="alert alert-danger alert-dismissible fade show py-2 mb-3" role="alert">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Request failed. Please try again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php endif; ?>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="small fw-semibold text-muted mb-2">Comment Sentiment</div>
+                        <?php
+                        $cTotal = array_sum($commentSentiment);
+                        foreach (['positive' => ['text-success','bi-emoji-smile'], 'neutral' => ['text-secondary','bi-emoji-neutral'], 'negative' => ['text-danger','bi-emoji-frown']] as $lbl => [$cls, $icon]):
+                            $cnt = $commentSentiment[$lbl] ?? 0;
+                            $pct = $cTotal > 0 ? round($cnt / $cTotal * 100) : 0;
+                        ?>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi <?= $icon ?> <?= $cls ?>" style="width:18px;"></i>
+                            <span class="small" style="width:70px;"><?= ucfirst($lbl) ?></span>
+                            <div class="progress flex-grow-1" style="height:10px;">
+                                <div class="progress-bar <?= $lbl === 'positive' ? 'bg-success' : ($lbl === 'negative' ? 'bg-danger' : 'bg-secondary') ?>"
+                                     style="width:<?= $pct ?>%"></div>
+                            </div>
+                            <span class="small text-muted" style="width:55px;"><?= $cnt ?> (<?= $pct ?>%)</span>
+                        </div>
+                        <?php endforeach; ?>
+                        <?php if ($cTotal === 0): ?>
+                            <div class="small text-muted">No analysed comments yet.</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="small fw-semibold text-muted mb-2">Article Sentiment</div>
+                        <?php
+                        $aTotal = array_sum($articleSentiment);
+                        foreach (['positive' => ['text-success','bi-emoji-smile'], 'neutral' => ['text-secondary','bi-emoji-neutral'], 'negative' => ['text-danger','bi-emoji-frown']] as $lbl => [$cls, $icon]):
+                            $cnt = $articleSentiment[$lbl] ?? 0;
+                            $pct = $aTotal > 0 ? round($cnt / $aTotal * 100) : 0;
+                        ?>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi <?= $icon ?> <?= $cls ?>" style="width:18px;"></i>
+                            <span class="small" style="width:70px;"><?= ucfirst($lbl) ?></span>
+                            <div class="progress flex-grow-1" style="height:10px;">
+                                <div class="progress-bar <?= $lbl === 'positive' ? 'bg-success' : ($lbl === 'negative' ? 'bg-danger' : 'bg-secondary') ?>"
+                                     style="width:<?= $pct ?>%"></div>
+                            </div>
+                            <span class="small text-muted" style="width:55px;"><?= $cnt ?> (<?= $pct ?>%)</span>
+                        </div>
+                        <?php endforeach; ?>
+                        <?php if ($aTotal === 0): ?>
+                            <div class="small text-muted">No analysed articles yet.</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
 

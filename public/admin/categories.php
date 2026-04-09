@@ -37,18 +37,39 @@ if ($editId > 0) {
 }
 
 // list (includes article count)
-$rows = $pdo->query("
-    SELECT
-      c.id, c.name, c.slug, c.sort_order, c.is_active, c.created_at,
-      COALESCE(x.article_count, 0) AS article_count
-    FROM categories c
-    LEFT JOIN (
-      SELECT category_id, COUNT(*) AS article_count
-      FROM articles
-      GROUP BY category_id
-    ) x ON x.category_id = c.id
-    ORDER BY c.sort_order ASC, c.name ASC
-")->fetchAll() ?: [];
+$rows = [];
+try {
+    $rows = $pdo->query("
+        SELECT
+          c.id, c.name, c.slug, c.sort_order, c.is_active, c.created_at,
+          COALESCE(x.article_count, 0) AS article_count
+        FROM categories c
+        LEFT JOIN (
+          SELECT category_id, COUNT(*) AS article_count
+          FROM articles
+          GROUP BY category_id
+        ) x ON x.category_id = c.id
+        ORDER BY c.sort_order ASC, c.name ASC
+    ")->fetchAll() ?: [];
+} catch (Throwable $e) {
+    // fallback without sort_order (production compat)
+    try {
+        $rows = $pdo->query("
+            SELECT
+              c.id, c.name, c.slug, 0 AS sort_order, c.is_active, c.created_at,
+              COALESCE(x.article_count, 0) AS article_count
+            FROM categories c
+            LEFT JOIN (
+              SELECT category_id, COUNT(*) AS article_count
+              FROM articles
+              GROUP BY category_id
+            ) x ON x.category_id = c.id
+            ORDER BY c.name ASC
+        ")->fetchAll() ?: [];
+    } catch (Throwable $e2) {
+        $rows = [];
+    }
+}
 
 $pageTitle = "Categories - Admin";
 require_once __DIR__ . '/_partials/admin_header.php';
@@ -218,7 +239,7 @@ require_once __DIR__ . '/_partials/admin_nav.php';
                                                 </form>
 
                                                 <!-- Delete (admin only, protected) -->
-                                                <?php if (($_SESSION['user']['role'] ?? ($user['role'] ?? 'user')) === 'admin'): ?>
+                                                <?php if (($user['role'] ?? 'user') === 'admin'): ?>
                                                     <form method="post" action="<?= h($ADMIN_URL) ?>/category_delete.php"
                                                         class="d-inline"
                                                         onsubmit="return confirm('Delete this category? If it is used by articles, it will be disabled instead.');">

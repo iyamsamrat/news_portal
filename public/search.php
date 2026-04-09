@@ -48,14 +48,17 @@ if ($tagSlug !== '') {
     $params['tag'] = $tagSlug;
 }
 
-// Search query
+// Search query (use distinct param names — PDO named params can't repeat)
 if ($q !== '') {
     $where .= " AND (
-        a.title LIKE :q
-        OR a.summary LIKE :q
-        OR a.content LIKE :q
+        a.title LIKE :q1
+        OR a.summary LIKE :q2
+        OR a.content LIKE :q3
     ) ";
-    $params['q'] = '%' . $q . '%';
+    $like = '%' . $q . '%';
+    $params['q1'] = $like;
+    $params['q2'] = $like;
+    $params['q3'] = $like;
 }
 
 // Popularity join (views)
@@ -184,50 +187,45 @@ function build_query_url(array $overrides = []): string
         <div class="row g-3">
             <?php foreach ($articles as $a): ?>
                 <?php
-                $url = BASE_URL . '/article.php?slug=' . urlencode((string) $a['slug']);
-                $catName = (string) ($a['category_name'] ?? 'General');
+                $url      = BASE_URL . '/article.php?slug=' . urlencode((string) $a['slug']);
+                $catName  = (string) ($a['category_name'] ?? 'General');
                 $catSlug2 = (string) ($a['category_slug'] ?? '');
-                $catUrl = $catSlug2 !== '' ? (BASE_URL . '/search.php?category=' . urlencode($catSlug2)) : '';
-                $published = !empty($a['published_at']) ? date('M d, Y', strtotime((string) $a['published_at'])) : '';
-                $views = (int) ($a['view_count'] ?? 0);
+                $catUrl   = $catSlug2 !== '' ? (BASE_URL . '/search.php?category=' . urlencode($catSlug2)) : '';
+                $published = !empty($a['published_at']) ? date('M j, Y', strtotime((string) $a['published_at'])) : '';
+                $views    = (int) ($a['view_count'] ?? 0);
+                $imgPath  = !empty($a['cover_image']) ? h(UPLOAD_URL) . '/' . h((string) $a['cover_image']) : null;
                 ?>
-                <div class="col-12 col-md-6 col-lg-4">
-                    <article class="np-card p-3 h-100">
-                        <?php if (!empty($a['cover_image'])): ?>
-                            <a href="<?= h($url) ?>" class="text-decoration-none">
-                                <img class="img-fluid rounded-4 border mb-3" alt="Cover"
-                                    src="<?= h(UPLOAD_URL) ?>/<?= h((string) $a['cover_image']) ?>">
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="np-article-card">
+                        <?php if ($imgPath): ?>
+                            <a href="<?= h($url) ?>">
+                                <img class="np-article-card-img" src="<?= $imgPath ?>"
+                                     alt="<?= h($a['title']) ?>">
                             </a>
                         <?php endif; ?>
-
-                        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                        <div class="np-article-card-body">
                             <?php if ($catUrl !== ''): ?>
-                                <a class="badge text-bg-light border text-decoration-none" href="<?= h($catUrl) ?>">
-                                    <?= h($catName) ?>
-                                </a>
+                                <a class="np-article-card-cat" href="<?= h($catUrl) ?>"><?= h($catName) ?></a>
                             <?php else: ?>
-                                <span class="badge text-bg-light border"><?= h($catName) ?></span>
+                                <span class="np-article-card-cat"><?= h($catName) ?></span>
                             <?php endif; ?>
-
-                            <?php if ($published !== ''): ?>
-                                <span class="text-muted small"><?= h($published) ?></span>
-                            <?php endif; ?>
-
-                            <?php if ($sort === 'popular'): ?>
-                                <span class="text-muted small">• <?= $views ?> views</span>
-                            <?php endif; ?>
-                        </div>
-
-                        <h2 class="h6 mb-2">
-                            <a class="text-decoration-none text-dark" href="<?= h($url) ?>">
+                            <a class="np-article-card-title" href="<?= h($url) ?>">
                                 <?= h((string) $a['title']) ?>
                             </a>
-                        </h2>
-
-                        <?php if (!empty($a['summary'])): ?>
-                            <p class="text-muted small mb-0"><?= h((string) $a['summary']) ?></p>
-                        <?php endif; ?>
-                    </article>
+                            <?php if (!empty($a['summary'])): ?>
+                                <div class="np-article-card-summary">
+                                    <?= h((string) $a['summary']) ?>
+                                </div>
+                            <?php endif; ?>
+                            <div class="np-article-card-meta">
+                                <i class="bi bi-clock"></i>
+                                <span><?= h($published) ?></span>
+                                <?php if ($sort === 'popular' && $views > 0): ?>
+                                    <span class="ms-auto"><i class="bi bi-eye me-1"></i><?= $views ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             <?php endforeach; ?>
         </div>

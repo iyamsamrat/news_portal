@@ -27,11 +27,11 @@ $user = auth_user();
 $isAdmin = (($user['role'] ?? 'user') === 'admin');
 
 if ($action === 'approve') {
-    $stmt = $pdo->prepare("UPDATE comments SET status='approved', updated_at=NOW() WHERE id=:id");
+    $stmt = $pdo->prepare("UPDATE comments SET status='approved' WHERE id=:id");
     $stmt->execute(['id' => $id]);
 
 } elseif ($action === 'reject') {
-    $stmt = $pdo->prepare("UPDATE comments SET status='rejected', updated_at=NOW() WHERE id=:id");
+    $stmt = $pdo->prepare("UPDATE comments SET status='hidden' WHERE id=:id");
     $stmt->execute(['id' => $id]);
 
 } elseif ($action === 'delete') {

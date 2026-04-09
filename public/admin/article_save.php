@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/config/db.php';
 require_once __DIR__ . '/../../app/core/auth.php';
 require_once __DIR__ . '/../../app/core/security.php';
+require_once __DIR__ . '/../../app/models/Article.php';
 
 auth_start();
 auth_require_role(['admin', 'editor']);
@@ -79,9 +80,26 @@ function normalize_tags(string $csv): array
 function table_exists(PDO $pdo, string $table): bool
 {
     try {
-        $stmt = $pdo->prepare("SHOW TABLES LIKE :t");
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.tables
+             WHERE table_schema = DATABASE() AND table_name = :t LIMIT 1"
+        );
         $stmt->execute(['t' => $table]);
-        return (bool) $stmt->fetchColumn();
+        return (int) $stmt->fetchColumn() > 0;
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+function column_exists(PDO $pdo, string $table, string $column): bool
+{
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = :t AND column_name = :c LIMIT 1"
+        );
+        $stmt->execute(['t' => $table, 'c' => $column]);
+        return (int) $stmt->fetchColumn() > 0;
     } catch (Throwable $e) {
         return false;
     }
@@ -204,9 +222,12 @@ if (!empty($_FILES['cover_image']['name']) && isset($_FILES['cover_image']['tmp_
 $user = auth_user();
 $createdBy = (int) ($user['id'] ?? 0);
 
+// Check optional columns that may be missing on older servers
+$hasSourceName = column_exists($pdo, 'articles', 'source_name');
+$hasMediaType  = column_exists($pdo, 'articles', 'media_type');
+
 if ($isEdit) {
-    $sql = "
-        UPDATE articles SET
+    $setClauses = "
             title=:title,
             slug=:slug,
             summary=:summary,
@@ -217,18 +238,10 @@ if ($isEdit) {
             is_featured=:is_featured,
             allow_comments=:allow_comments,
             cover_image=:cover_image,
-            source_name=:source_name,
-            source_url=:source_url,
-            media_type=:media_type,
-            media_url=:media_url,
             meta_title=:meta_title,
             meta_description=:meta_description,
-            updated_at=NOW()
-        WHERE id=:id
-        LIMIT 1
-    ";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
+            updated_at=NOW()";
+    $params = [
         'title' => $title,
         'slug' => $slug,
         'summary' => $summary,
@@ -239,58 +252,78 @@ if ($isEdit) {
         'is_featured' => $isFeatured,
         'allow_comments' => $allowComments,
         'cover_image' => $coverFileName !== '' ? $coverFileName : null,
-        'source_name' => $sourceName !== '' ? $sourceName : null,
-        'source_url' => $sourceUrl !== '' ? $sourceUrl : null,
-        'media_type' => $mediaType,
-        'media_url' => $mediaUrl !== '' ? $mediaUrl : null,
         'meta_title' => $metaTitle !== '' ? $metaTitle : null,
         'meta_description' => $metaDesc !== '' ? $metaDesc : null,
         'id' => $id,
-    ]);
+    ];
+    if ($hasSourceName) {
+        $setClauses = "source_name=:source_name, source_url=:source_url," . $setClauses;
+        $params['source_name'] = $sourceName !== '' ? $sourceName : null;
+        $params['source_url']  = $sourceUrl !== '' ? $sourceUrl : null;
+    }
+    if ($hasMediaType) {
+        $setClauses = "media_type=:media_type, media_url=:media_url," . $setClauses;
+        $params['media_type'] = $mediaType;
+        $params['media_url']  = $mediaUrl !== '' ? $mediaUrl : null;
+    }
+
+    $sql = "UPDATE articles SET $setClauses WHERE id=:id LIMIT 1";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
 
     $articleId = $id;
 } else {
+    $extraCols = '';
+    $extraVals = '';
+    $params = [
+        'title' => $title,
+        'slug' => $slug,
+        'summary' => $summary,
+        'content' => $content,
+        'category_id' => $categoryId > 0 ? $categoryId : null,
+        'status' => $status,
+        'published_at' => $publishedAt,
+        'is_featured' => $isFeatured,
+        'allow_comments' => $allowComments,
+        'cover_image' => $coverFileName !== '' ? $coverFileName : null,
+        'meta_title' => $metaTitle !== '' ? $metaTitle : null,
+        'meta_description' => $metaDesc !== '' ? $metaDesc : null,
+        'created_by' => $createdBy,
+    ];
+    if ($hasSourceName) {
+        $extraCols .= ', source_name, source_url';
+        $extraVals .= ', :source_name, :source_url';
+        $params['source_name'] = $sourceName !== '' ? $sourceName : null;
+        $params['source_url']  = $sourceUrl !== '' ? $sourceUrl : null;
+    }
+    if ($hasMediaType) {
+        $extraCols .= ', media_type, media_url';
+        $extraVals .= ', :media_type, :media_url';
+        $params['media_type'] = $mediaType;
+        $params['media_url']  = $mediaUrl !== '' ? $mediaUrl : null;
+    }
+
     $sql = "
         INSERT INTO articles (
             title, slug, summary, content,
             category_id, status, published_at,
             is_featured, allow_comments,
             cover_image,
-            source_name, source_url,
-            media_type, media_url,
             meta_title, meta_description,
             created_by, created_at, updated_at
+            $extraCols
         ) VALUES (
             :title, :slug, :summary, :content,
             :category_id, :status, :published_at,
             :is_featured, :allow_comments,
             :cover_image,
-            :source_name, :source_url,
-            :media_type, :media_url,
             :meta_title, :meta_description,
             :created_by, NOW(), NOW()
+            $extraVals
         )
     ";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        'title' => $title,
-        'slug' => $slug,
-        'summary' => $summary,
-        'content' => $content,
-        'category_id' => $categoryId > 0 ? $categoryId : null,
-        'status' => $status,
-        'published_at' => $publishedAt,
-        'is_featured' => $isFeatured,
-        'allow_comments' => $allowComments,
-        'cover_image' => $coverFileName !== '' ? $coverFileName : null,
-        'source_name' => $sourceName !== '' ? $sourceName : null,
-        'source_url' => $sourceUrl !== '' ? $sourceUrl : null,
-        'media_type' => $mediaType,
-        'media_url' => $mediaUrl !== '' ? $mediaUrl : null,
-        'meta_title' => $metaTitle !== '' ? $metaTitle : null,
-        'meta_description' => $metaDesc !== '' ? $metaDesc : null,
-        'created_by' => $createdBy,
-    ]);
+    $stmt->execute($params);
 
     $articleId = (int) $pdo->lastInsertId();
 }
@@ -331,6 +364,9 @@ if ($hasTags) {
         // If tag sync fails, article is still saved.
     }
 }
+
+// Run sentiment analysis on the saved article
+Article::analyseSentiment($articleId);
 
 // Redirect to edit page (so user can keep editing)
 redirect_articles($ADMIN_URL . '/article_form.php?id=' . $articleId);

@@ -56,6 +56,10 @@ if ($action === 'publish') {
 
 } elseif ($action === 'toggle_featured') {
     $new = $isFeatured ? 0 : 1;
+    if ($new === 1) {
+        // Unfeature all others first so only one hero exists at a time
+        $pdo->exec("UPDATE articles SET is_featured=0 WHERE is_featured=1");
+    }
     $u = $pdo->prepare("UPDATE articles SET is_featured=:v, updated_at=NOW() WHERE id=:id");
     $u->execute(['v' => $new, 'id' => $id]);
 

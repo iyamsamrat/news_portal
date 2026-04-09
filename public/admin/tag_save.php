@@ -63,8 +63,14 @@ if ($isEdit) {
     $st = $pdo->prepare("UPDATE tags SET name=:name, slug=:slug WHERE id=:id LIMIT 1");
     $st->execute(['name' => $name, 'slug' => $slug, 'id' => $id]);
 } else {
-    $st = $pdo->prepare("INSERT INTO tags (name, slug, created_at) VALUES (:name, :slug, NOW())");
-    $st->execute(['name' => $name, 'slug' => $slug]);
+    try {
+        $st = $pdo->prepare("INSERT INTO tags (name, slug, created_at) VALUES (:name, :slug, NOW())");
+        $st->execute(['name' => $name, 'slug' => $slug]);
+    } catch (Throwable $e) {
+        // fallback: created_at column missing on this server
+        $st = $pdo->prepare("INSERT INTO tags (name, slug) VALUES (:name, :slug)");
+        $st->execute(['name' => $name, 'slug' => $slug]);
+    }
 }
 
 header('Location: ' . $ADMIN_URL . '/tags.php');

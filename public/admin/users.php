@@ -35,8 +35,9 @@ $where = " WHERE 1=1 ";
 $params = [];
 
 if ($q !== '') {
-    $where .= " AND (u.name LIKE :q OR u.email LIKE :q) ";
-    $params['q'] = '%' . $q . '%';
+    $where .= " AND (u.name LIKE :q1 OR u.email LIKE :q2) ";
+    $params['q1'] = '%' . $q . '%';
+    $params['q2'] = '%' . $q . '%';
 }
 if ($role !== '') {
     $where .= " AND u.role = :role ";
