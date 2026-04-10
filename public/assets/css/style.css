@@ -488,7 +488,35 @@ img { display: block; max-width: 100%; }
   line-height: 1.85;
   color: #222;
 }
-.np-prose p { margin-bottom: 1.25rem; }
+.np-prose p       { margin-bottom: 1.25rem; }
+.np-prose h2      { font-size: 1.4rem; font-weight: 700; margin: 1.8rem 0 .75rem; }
+.np-prose h3      { font-size: 1.15rem; font-weight: 700; margin: 1.5rem 0 .6rem; }
+.np-prose h4      { font-size: 1rem; font-weight: 700; margin: 1.2rem 0 .5rem; }
+.np-prose ul,
+.np-prose ol      { padding-left: 1.6rem; margin-bottom: 1.25rem; }
+.np-prose li      { margin-bottom: .35rem; }
+.np-prose blockquote {
+  border-left: 4px solid var(--border);
+  margin: 1.5rem 0;
+  padding: .6rem 1.2rem;
+  color: var(--text2);
+  font-style: italic;
+}
+.np-prose pre {
+  background: #f4f4f4;
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  overflow-x: auto;
+  font-size: .88rem;
+  margin-bottom: 1.25rem;
+}
+.np-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: .75rem 0;
+}
+.np-prose a { color: var(--red); text-decoration: underline; }
 
 /* =========================================================
    PAGINATION
@@ -663,6 +691,23 @@ img { display: block; max-width: 100%; }
   box-shadow: var(--sh);
 }
 
+/* Quill rich text editor overrides */
+#np-editor .ql-container,
+#np-editor { border-radius: 0 0 6px 6px !important; }
+.ql-toolbar.ql-snow {
+  border-radius: 6px 6px 0 0;
+  border-color: #dee2e6 !important;
+  background: #f8f9fa;
+}
+.ql-container.ql-snow {
+  border-color: #dee2e6 !important;
+  font-size: .95rem;
+}
+.ql-editor { min-height: 320px; }
+.ql-editor img { max-width: 100%; height: auto; border-radius: 4px; }
+.ql-editor p,
+.ql-editor li { line-height: 1.75; }
+
 /* Admin filter/search bar */
 .admin-filter-bar {
   display: flex;
@@ -678,3 +723,187 @@ img { display: block; max-width: 100%; }
 
 /* Utilities */
 .text-red { color: var(--red) !important; }
+
+/* =========================================================
+   Search / Browse page header
+   ========================================================= */
+.np-search-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+/* Top row: icon+title on the left, sort+clear on the right */
+.np-search-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.np-search-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.np-search-icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(193,39,45,.08);
+  color: var(--red);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.np-search-h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 2px;
+  line-height: 1.25;
+}
+
+.np-search-meta {
+  font-size: .78rem;
+  color: var(--text3);
+}
+.np-search-meta-sep { margin: 0 4px; }
+
+/* Sort pills + clear-all group */
+.np-search-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.np-sort-pills {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.np-sort-pill {
+  padding: 4px 14px;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text2);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.np-sort-pill:hover { background: rgba(0,0,0,.04); color: var(--text); }
+.np-sort-pill.active {
+  background: var(--text);
+  color: #fff;
+}
+.np-sort-pill + .np-sort-pill {
+  border-left: 1px solid var(--border);
+}
+.np-sort-pill.active + .np-sort-pill,
+.np-sort-pill + .np-sort-pill.active { border-left-color: var(--text); }
+
+.np-clear-all {
+  font-size: .78rem;
+  color: var(--text3);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background .15s, color .15s;
+}
+.np-clear-all:hover { background: rgba(193,39,45,.07); color: var(--red); }
+
+/* Active filter chips */
+.np-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.np-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--text2);
+  background: rgba(0,0,0,.04);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  text-decoration: none;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.np-chip:hover {
+  background: rgba(193,39,45,.07);
+  border-color: rgba(193,39,45,.25);
+  color: var(--red);
+}
+.np-chip-x { opacity: .5; font-size: .7rem; margin-left: 1px; }
+.np-chip:hover .np-chip-x { opacity: 1; }
+
+/* Date range filter bar */
+.np-date-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.np-date-label {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text3);
+  white-space: nowrap;
+}
+
+.np-date-input {
+  height: 32px;
+  padding: 0 8px;
+  font-size: .8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: #fafafa;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  width: auto;
+  min-width: 130px;
+}
+.np-date-input:focus {
+  border-color: #aaa;
+  box-shadow: 0 0 0 3px rgba(0,0,0,.06);
+}
+
+.np-date-sep {
+  font-size: .8rem;
+  color: var(--text3);
+}
+
+.np-date-apply {
+  height: 32px;
+  padding: 0 14px;
+  font-size: .78rem;
+  font-weight: 600;
+  background: var(--text);
+  color: #fff;
+  border: none;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: background .15s;
+}
+.np-date-apply:hover { background: #333; }

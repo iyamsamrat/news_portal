@@ -112,6 +112,7 @@ function suggest_slug(string $title): string
 }
 
 $pageTitle = ($isEdit ? "Edit Article" : "New Article") . " - Admin";
+$extraHead  = '<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">';
 require_once __DIR__ . '/_partials/admin_header.php';
 require_once __DIR__ . '/_partials/admin_nav.php';
 
@@ -173,9 +174,10 @@ if (!empty($form['cover_image']) && defined('UPLOAD_URL')) {
 
                 <div class="mb-3">
                     <label class="form-label">Content <span class="text-danger">*</span></label>
-                    <textarea class="form-control" name="content" rows="14"
-                              placeholder="Write the full article content..." required><?= h($form['content']) ?></textarea>
-                    <div class="form-text">We keep it minimal now. Later you can add a rich text editor.</div>
+                    <div id="np-editor" style="min-height:320px;background:#fff;border-radius:0 0 6px 6px;font-size:.95rem;"></div>
+                    <textarea id="np-content" name="content" style="display:none;"><?= h($form['content']) ?></textarea>
+                    <div id="np-content-error" class="invalid-feedback" style="display:none;">Content is required.</div>
+                    <div class="form-text">Use the toolbar to format text. Click the image icon to upload images.</div>
                 </div>
 
                 <hr class="my-4">
@@ -301,5 +303,99 @@ if (!empty($form['cover_image']) && defined('UPLOAD_URL')) {
         </div>
     </form>
 </main>
+
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+<script>
+(function () {
+    var uploadUrl  = <?= json_encode(rtrim(BASE_URL, '/') . '/admin/editor_upload.php') ?>;
+    var csrfToken  = document.querySelector('[name=csrf_token]').value;
+
+    var quill = new Quill('#np-editor', {
+        theme: 'snow',
+        placeholder: 'Write the full article content…',
+        modules: {
+            toolbar: {
+                container: [
+                    [{ header: [2, 3, 4, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    [{ indent: '-1' }, { indent: '+1' }],
+                    ['blockquote', 'code-block'],
+                    ['link', 'image'],
+                    [{ align: [] }],
+                    ['clean']
+                ],
+                handlers: {
+                    image: function () {
+                        var input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = function () {
+                            var file = input.files[0];
+                            if (!file) return;
+                            var fd = new FormData();
+                            fd.append('image', file);
+                            fd.append('csrf_token', csrfToken);
+                            fetch(uploadUrl, { method: 'POST', body: fd })
+                                .then(function (r) { return r.json(); })
+                                .then(function (data) {
+                                    if (data.url) {
+                                        var range = quill.getSelection(true);
+                                        quill.insertEmbed(range.index, 'image', data.url, Quill.sources.USER);
+                                        quill.setSelection(range.index + 1, Quill.sources.SILENT);
+                                    } else {
+                                        alert('Image upload failed: ' + (data.error || 'unknown error'));
+                                    }
+                                })
+                                .catch(function () { alert('Image upload failed.'); });
+                        };
+                        input.click();
+                    }
+                }
+            }
+        }
+    });
+
+    // Clear validation state on input
+    quill.on('text-change', function () {
+        document.getElementById('np-content-error').style.display = 'none';
+        quill.root.style.border = '';
+    });
+
+    // Load existing content (HTML or plain text)
+    var existing = document.getElementById('np-content').value.trim();
+    if (existing !== '') {
+        if (/<[a-z][\s\S]*>/i.test(existing)) {
+            quill.root.innerHTML = existing;
+        } else {
+            // Legacy plain text — convert paragraphs
+            var html = existing.split(/\n\n+/).map(function (p) {
+                return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+            }).join('');
+            quill.root.innerHTML = html;
+        }
+    }
+
+    // Sync to hidden textarea before submit, with manual validation
+    var form = document.querySelector('form');
+    form.addEventListener('submit', function (e) {
+        var html = quill.root.innerHTML.trim();
+        var isEmpty = html === '' || html === '<p><br></p>';
+        var errEl = document.getElementById('np-content-error');
+
+        if (isEmpty) {
+            e.preventDefault();
+            errEl.style.display = 'block';
+            quill.root.style.border = '1px solid #dc3545';
+            quill.focus();
+            return;
+        }
+
+        errEl.style.display = 'none';
+        quill.root.style.border = '';
+        document.getElementById('np-content').value = html;
+    });
+})();
+</script>
 
 <?php require_once __DIR__ . '/_partials/admin_footer.php'; ?>

@@ -159,11 +159,18 @@ function h(?string $v): string
 
         <div class="np-prose">
             <?php
-            $paras = preg_split("/\R\R+/", (string) $article['content']);
-            foreach ($paras as $p) {
-                $p = trim($p);
-                if ($p === '') continue;
-                echo '<p>' . nl2br(h($p)) . '</p>';
+            $rawContent = trim((string) $article['content']);
+            if (preg_match('/<[a-z][\s\S]*>/i', $rawContent)) {
+                // HTML content from rich text editor — output directly (written by trusted admin/editor)
+                echo $rawContent;
+            } else {
+                // Legacy plain text — split into paragraphs
+                $paras = preg_split("/\R\R+/", $rawContent);
+                foreach ($paras as $p) {
+                    $p = trim($p);
+                    if ($p === '') continue;
+                    echo '<p>' . nl2br(h($p)) . '</p>';
+                }
             }
             ?>
         </div>

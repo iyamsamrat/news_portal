@@ -15,11 +15,22 @@ function h(?string $v): string
 }
 
 // Filters
-$q = trim((string) ($_GET['q'] ?? ''));
-$catSlug = trim((string) ($_GET['category'] ?? ''));
-$tagSlug = trim((string) ($_GET['tag'] ?? ''));
-$sort = trim((string) ($_GET['sort'] ?? 'latest'));
-$page = max(1, (int) ($_GET['page'] ?? 1));
+$q        = trim((string) ($_GET['q']         ?? ''));
+$catSlug  = trim((string) ($_GET['category']  ?? ''));
+$tagSlug  = trim((string) ($_GET['tag']       ?? ''));
+$sort     = trim((string) ($_GET['sort']      ?? 'latest'));
+$page     = max(1, (int)  ($_GET['page']      ?? 1));
+
+// Date filters – accept YYYY-MM-DD only
+$dateFrom = '';
+$dateTo   = '';
+if (!empty($_GET['date_from']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date_from']))
+    $dateFrom = $_GET['date_from'];
+if (!empty($_GET['date_to'])   && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date_to']))
+    $dateTo   = $_GET['date_to'];
+// Swap if reversed
+if ($dateFrom !== '' && $dateTo !== '' && $dateFrom > $dateTo)
+    [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
 
 $allowedSort = ['latest', 'popular'];
 if (!in_array($sort, $allowedSort, true))
@@ -46,6 +57,16 @@ if ($tagSlug !== '') {
                 INNER JOIN tags t ON t.id = atg.tag_id ";
     $where .= " AND t.slug = :tag ";
     $params['tag'] = $tagSlug;
+}
+
+// Date range filter
+if ($dateFrom !== '') {
+    $where .= " AND DATE(a.published_at) >= :date_from ";
+    $params['date_from'] = $dateFrom;
+}
+if ($dateTo !== '') {
+    $where .= " AND DATE(a.published_at) <= :date_to ";
+    $params['date_to'] = $dateTo;
 }
 
 // Search query (use distinct param names — PDO named params can't repeat)
@@ -122,8 +143,14 @@ if ($catSlug !== '')
     $filtersTitleParts[] = 'Category: ' . $catSlug;
 if ($tagSlug !== '')
     $filtersTitleParts[] = 'Tag: ' . $tagSlug;
+if ($dateFrom !== '' || $dateTo !== '') {
+    $dLabel = ($dateFrom !== '' ? $dateFrom : '…') . ' → ' . ($dateTo !== '' ? $dateTo : '…');
+    $filtersTitleParts[] = 'Date: ' . $dLabel;
+}
 if (!$filtersTitleParts)
     $filtersTitleParts[] = 'Browse';
+
+$hasDateFilter = $dateFrom !== '' || $dateTo !== '';
 
 $pageTitle = implode(' • ', $filtersTitleParts) . ' - ' . APP_NAME;
 
@@ -145,36 +172,93 @@ function build_query_url(array $overrides = []): string
 
 <main id="main" class="container my-4" style="max-width: 1100px;">
 
-    <div
-        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
-        <div>
-            <h1 class="h4 mb-1"><?= h($filtersTitleParts[0] ?? 'Browse') ?></h1>
-            <div class="small text-muted">
-                <?= (int) $total ?> result(s)
-                <?php if ($sort === 'popular'): ?> • sorted by popularity<?php endif; ?>
-                <?php if ($sort === 'latest'): ?> • sorted by latest<?php endif; ?>
+    <!-- Page header -->
+    <div class="np-search-header mb-3">
+        <div class="np-search-header-inner">
+            <!-- Icon + title -->
+            <div class="np-search-title-row">
+                <?php
+                $icon = 'bi-search';
+                if ($catSlug !== '')  $icon = 'bi-folder2-open';
+                elseif ($tagSlug !== '') $icon = 'bi-hash';
+                elseif ($q !== '')    $icon = 'bi-search';
+                else                  $icon = 'bi-newspaper';
+                ?>
+                <span class="np-search-icon"><i class="bi <?= $icon ?>"></i></span>
+                <div>
+                    <h1 class="np-search-h1"><?= h($filtersTitleParts[0] ?? 'Browse') ?></h1>
+                    <div class="np-search-meta">
+                        <span><?= (int) $total ?> result<?= $total !== 1 ? 's' : '' ?></span>
+                        <span class="np-search-meta-sep">·</span>
+                        <span><?= $sort === 'popular' ? 'by popularity' : 'latest first' ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sort + clear -->
+            <div class="np-search-actions">
+                <div class="np-sort-pills">
+                    <a class="np-sort-pill <?= $sort === 'latest'  ? 'active' : '' ?>"
+                       href="<?= h(build_query_url(['sort' => 'latest',  'page' => 1])) ?>">
+                        <i class="bi bi-clock me-1"></i>Latest
+                    </a>
+                    <a class="np-sort-pill <?= $sort === 'popular' ? 'active' : '' ?>"
+                       href="<?= h(build_query_url(['sort' => 'popular', 'page' => 1])) ?>">
+                        <i class="bi bi-fire me-1"></i>Popular
+                    </a>
+                </div>
+                <?php if ($q !== '' || $catSlug !== '' || $tagSlug !== '' || $hasDateFilter): ?>
+                    <a class="np-clear-all" href="<?= h(BASE_URL) ?>/search.php">
+                        <i class="bi bi-x-circle me-1"></i>Clear all
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 
-        <div class="d-flex gap-2 flex-wrap">
-            <a class="btn btn-sm <?= $sort === 'latest' ? 'btn-dark' : 'btn-outline-dark' ?>"
-                href="<?= h(build_query_url(['sort' => 'latest', 'page' => 1])) ?>">Latest</a>
-
-            <a class="btn btn-sm <?= $sort === 'popular' ? 'btn-dark' : 'btn-outline-dark' ?>"
-                href="<?= h(build_query_url(['sort' => 'popular', 'page' => 1])) ?>">Popular</a>
-
-            <?php if ($q !== '' || $catSlug !== '' || $tagSlug !== ''): ?>
-                <a class="btn btn-sm btn-outline-dark" href="<?= h(BASE_URL) ?>/search.php">Clear</a>
+        <!-- Active filter chips -->
+        <?php $hasChips = $q !== '' || $catSlug !== '' || $tagSlug !== '' || $hasDateFilter; ?>
+        <?php if ($hasChips): ?>
+        <div class="np-filter-chips">
+            <?php if ($q !== ''): ?>
+                <a class="np-chip" href="<?= h(build_query_url(['q' => null, 'page' => 1])) ?>">
+                    <i class="bi bi-search"></i> <?= h($q) ?> <i class="bi bi-x np-chip-x"></i>
+                </a>
+            <?php endif; ?>
+            <?php if ($catSlug !== ''): ?>
+                <a class="np-chip" href="<?= h(build_query_url(['category' => null, 'page' => 1])) ?>">
+                    <i class="bi bi-folder2-open"></i> <?= h($catSlug) ?> <i class="bi bi-x np-chip-x"></i>
+                </a>
+            <?php endif; ?>
+            <?php if ($tagSlug !== ''): ?>
+                <a class="np-chip" href="<?= h(build_query_url(['tag' => null, 'page' => 1])) ?>">
+                    <i class="bi bi-hash"></i><?= h($tagSlug) ?> <i class="bi bi-x np-chip-x"></i>
+                </a>
+            <?php endif; ?>
+            <?php if ($hasDateFilter): ?>
+                <a class="np-chip" href="<?= h(build_query_url(['date_from' => null, 'date_to' => null, 'page' => 1])) ?>">
+                    <i class="bi bi-calendar3"></i>
+                    <?= $dateFrom !== '' ? h($dateFrom) : '…' ?> → <?= $dateTo !== '' ? h($dateTo) : '…' ?>
+                    <i class="bi bi-x np-chip-x"></i>
+                </a>
             <?php endif; ?>
         </div>
-    </div>
+        <?php endif; ?>
 
-    <div class="d-flex flex-wrap gap-2 mb-3">
-        <?php if ($q !== ''): ?><span class="badge text-bg-light border">q: <?= h($q) ?></span><?php endif; ?>
-        <?php if ($catSlug !== ''): ?><span class="badge text-bg-light border">category:
-                <?= h($catSlug) ?></span><?php endif; ?>
-        <?php if ($tagSlug !== ''): ?><span class="badge text-bg-light border">tag:
-                #<?= h($tagSlug) ?></span><?php endif; ?>
+        <!-- Date range filter -->
+        <form method="get" action="<?= h(BASE_URL) ?>/search.php" class="np-date-form">
+            <?php foreach (['q' => $q, 'category' => $catSlug, 'tag' => $tagSlug, 'sort' => $sort] as $_k => $_v):
+                if ($_v !== ''): ?>
+                    <input type="hidden" name="<?= $_k ?>" value="<?= h($_v) ?>">
+            <?php endif; endforeach; ?>
+
+            <span class="np-date-label"><i class="bi bi-calendar3"></i> Date range</span>
+            <input type="date" name="date_from" class="np-date-input"
+                   value="<?= h($dateFrom) ?>" max="<?= date('Y-m-d') ?>">
+            <span class="np-date-sep">→</span>
+            <input type="date" name="date_to" class="np-date-input"
+                   value="<?= h($dateTo) ?>" max="<?= date('Y-m-d') ?>">
+            <button type="submit" class="np-date-apply">Apply</button>
+        </form>
     </div>
 
     <?php if (empty($articles)): ?>
