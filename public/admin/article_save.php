@@ -153,9 +153,9 @@ if ($isEdit) {
     }
 }
 
-// If errors, go back to form (simple approach: redirect back with query param)
+// If errors, go back to form with flash message
 if ($errors) {
-    // For now: redirect back; later we can implement flash messages
+    $_SESSION['flash_error'] = implode(' ', $errors);
     $to = $ADMIN_URL . '/article_form.php' . ($id ? ('?id=' . $id) : '');
     redirect_articles($to);
 }
@@ -188,33 +188,46 @@ if ($status !== 'published') {
 $coverFileName = $isEdit && $existing ? (string) ($existing['cover_image'] ?? '') : '';
 
 $uploadDir = defined('UPLOAD_PATH') ? rtrim(UPLOAD_PATH, '/\\') : '';
+
+// Create upload directory if missing
+if ($uploadDir !== '' && !is_dir($uploadDir)) {
+    @mkdir($uploadDir, 0755, true);
+}
+
 $canUpload = $uploadDir !== '' && is_dir($uploadDir) && is_writable($uploadDir);
 
+// Handle remove request
+if (($_POST['remove_cover'] ?? '0') === '1') {
+    $coverFileName = '';
+}
+
+// Handle new upload
 if (!empty($_FILES['cover_image']['name']) && isset($_FILES['cover_image']['tmp_name']) && $canUpload) {
-    if ((int) $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
-        $tmp = (string) $_FILES['cover_image']['tmp_name'];
+    $fileError = (int) $_FILES['cover_image']['error'];
+    if ($fileError === UPLOAD_ERR_OK) {
+        $tmp  = (string) $_FILES['cover_image']['tmp_name'];
         $size = (int) $_FILES['cover_image']['size'];
 
-        // Size limit 3MB
-        if ($size > 3 * 1024 * 1024) {
-            // ignore upload if too big (later: flash error)
-        } else {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = $finfo ? finfo_file($finfo, $tmp) : '';
-            if ($finfo)
-                finfo_close($finfo);
+        // Use getimagesize — always available, no extension required
+        $imgInfo = @getimagesize($tmp);
+        $allowed = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp', IMAGETYPE_GIF => 'gif'];
+        $imgType = $imgInfo ? (int)$imgInfo[2] : 0;
 
-            $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-            if (isset($allowed[$mime])) {
-                $ext = $allowed[$mime];
-                $newName = 'cover_' . $slug . '_' . time() . '.' . $ext;
-                $dest = $uploadDir . DIRECTORY_SEPARATOR . $newName;
+        if ($imgInfo && isset($allowed[$imgType])) {
+            $ext     = $allowed[$imgType];
+            $newName = 'cover_' . $slug . '_' . time() . '.' . $ext;
+            $dest    = $uploadDir . DIRECTORY_SEPARATOR . $newName;
 
-                if (move_uploaded_file($tmp, $dest)) {
-                    $coverFileName = $newName;
-                }
+            if (move_uploaded_file($tmp, $dest)) {
+                $coverFileName = $newName;
+            } else {
+                $_SESSION['flash_error'] = 'Cover image could not be saved. Check folder permissions.';
             }
+        } else {
+            $_SESSION['flash_error'] = 'Cover image must be JPG, PNG, WebP or GIF.';
         }
+    } elseif ($fileError !== UPLOAD_ERR_NO_FILE) {
+        $_SESSION['flash_error'] = 'Cover image upload error (code ' . $fileError . ').';
     }
 }
 
@@ -368,5 +381,6 @@ if ($hasTags) {
 // Run sentiment analysis on the saved article
 Article::analyseSentiment($articleId);
 
-// Redirect to edit page (so user can keep editing)
+// Redirect to edit page with success message
+$_SESSION['flash_success'] = $isEdit ? 'Article updated.' : 'Article created.';
 redirect_articles($ADMIN_URL . '/article_form.php?id=' . $articleId);

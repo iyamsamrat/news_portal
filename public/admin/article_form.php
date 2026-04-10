@@ -123,6 +123,24 @@ if (!empty($form['cover_image']) && defined('UPLOAD_URL')) {
 ?>
 
 <main id="main" class="container-fluid p-3 p-md-4">
+
+    <?php if (!empty($_SESSION['flash_error'])): ?>
+        <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2 mb-3" style="max-width:1100px;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div><?= h($_SESSION['flash_error']) ?></div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+        <?php unset($_SESSION['flash_error']); ?>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['flash_success'])): ?>
+        <div class="alert alert-success alert-dismissible d-flex align-items-center gap-2 mb-3" style="max-width:1100px;">
+            <i class="bi bi-check-circle-fill"></i>
+            <div><?= h($_SESSION['flash_success']) ?></div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+        <?php unset($_SESSION['flash_success']); ?>
+    <?php endif; ?>
+
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-2 mb-3">
         <div>
             <h1 class="h4 mb-1"><?= $isEdit ? 'Edit Article' : 'New Article' ?></h1>
@@ -287,16 +305,30 @@ if (!empty($form['cover_image']) && defined('UPLOAD_URL')) {
                     <div class="fw-semibold mb-2">Cover Image</div>
 
                     <?php if ($coverPreview): ?>
-                        <div class="mb-2">
-                            <img src="<?= h($coverPreview) ?>" class="img-fluid rounded-3 border" alt="Cover">
+                        <div id="cover-preview-wrap" class="mb-2">
+                            <img id="cover-preview-img" src="<?= h($coverPreview) ?>"
+                                 class="img-fluid rounded-3 border w-100"
+                                 style="object-fit:cover;max-height:180px;" alt="Cover">
                         </div>
-                        <div class="small text-muted mb-2">Current: <?= h($form['cover_image']) ?></div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="small text-muted text-truncate"><?= h(basename($form['cover_image'])) ?></span>
+                            <button type="button" id="cover-remove-btn"
+                                    class="btn btn-sm btn-outline-danger ms-auto py-0">
+                                <i class="bi bi-x"></i> Remove
+                            </button>
+                        </div>
+                        <input type="hidden" name="remove_cover" id="remove_cover" value="0">
                     <?php else: ?>
-                        <div class="small text-muted mb-2">No cover image uploaded yet.</div>
+                        <div id="cover-preview-wrap" style="display:none;" class="mb-2">
+                            <img id="cover-preview-img" src="" class="img-fluid rounded-3 border w-100"
+                                 style="object-fit:cover;max-height:180px;" alt="Cover preview">
+                        </div>
+                        <input type="hidden" name="remove_cover" id="remove_cover" value="0">
                     <?php endif; ?>
 
-                    <input class="form-control" type="file" name="cover_image" accept="image/*">
-                    <div class="form-text">Optional. We will validate and store it in Step 3.</div>
+                    <input type="file" name="cover_image" id="cover_image_input"
+                           class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp,image/gif">
+                    <div class="form-text">JPG, PNG, WebP or GIF. Leave blank to keep current.</div>
                 </div>
 
             </div>
@@ -306,95 +338,172 @@ if (!empty($form['cover_image']) && defined('UPLOAD_URL')) {
 
 <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 <script>
+// ---- Rich text editor ----
 (function () {
-    var uploadUrl  = <?= json_encode(rtrim(BASE_URL, '/') . '/admin/editor_upload.php') ?>;
-    var csrfToken  = document.querySelector('[name=csrf_token]').value;
+    var contentTextarea = document.getElementById('np-content');
+    var editorDiv       = document.getElementById('np-editor');
+    var errEl           = document.getElementById('np-content-error');
+    var form            = document.querySelector('form');
 
-    var quill = new Quill('#np-editor', {
-        theme: 'snow',
-        placeholder: 'Write the full article content…',
-        modules: {
-            toolbar: {
-                container: [
-                    [{ header: [2, 3, 4, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ list: 'ordered' }, { list: 'bullet' }],
-                    [{ indent: '-1' }, { indent: '+1' }],
-                    ['blockquote', 'code-block'],
-                    ['link', 'image'],
-                    [{ align: [] }],
-                    ['clean']
-                ],
-                handlers: {
-                    image: function () {
-                        var input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = 'image/*';
-                        input.onchange = function () {
-                            var file = input.files[0];
-                            if (!file) return;
-                            var fd = new FormData();
-                            fd.append('image', file);
-                            fd.append('csrf_token', csrfToken);
-                            fetch(uploadUrl, { method: 'POST', body: fd })
-                                .then(function (r) { return r.json(); })
-                                .then(function (data) {
-                                    if (data.url) {
-                                        var range = quill.getSelection(true);
-                                        quill.insertEmbed(range.index, 'image', data.url, Quill.sources.USER);
-                                        quill.setSelection(range.index + 1, Quill.sources.SILENT);
-                                    } else {
-                                        alert('Image upload failed: ' + (data.error || 'unknown error'));
-                                    }
-                                })
-                                .catch(function () { alert('Image upload failed.'); });
-                        };
-                        input.click();
+    // Fallback: if Quill didn't load, reveal the plain textarea and submit normally
+    if (typeof Quill === 'undefined') {
+        contentTextarea.style.display = '';
+        contentTextarea.rows = 14;
+        if (editorDiv) editorDiv.style.display = 'none';
+        return;
+    }
+
+    var uploadUrl = <?= json_encode(rtrim(BASE_URL, '/') . '/admin/editor_upload.php') ?>;
+    var csrfToken = document.querySelector('[name=csrf_token]').value;
+    var quill;
+
+    try {
+        quill = new Quill(editorDiv, {
+            theme: 'snow',
+            placeholder: 'Write the full article content…',
+            modules: {
+                toolbar: {
+                    container: [
+                        [{ header: [2, 3, 4, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        [{ indent: '-1' }, { indent: '+1' }],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image'],
+                        [{ align: [] }],
+                        ['clean']
+                    ],
+                    handlers: {
+                        image: function () {
+                            var picker = document.createElement('input');
+                            picker.type = 'file';
+                            picker.accept = 'image/*';
+                            picker.onchange = function () {
+                                var file = picker.files[0];
+                                if (!file) return;
+                                var fd = new FormData();
+                                fd.append('image', file);
+                                fd.append('csrf_token', csrfToken);
+                                fetch(uploadUrl, { method: 'POST', body: fd })
+                                    .then(function (r) { return r.json(); })
+                                    .then(function (data) {
+                                        if (data.url) {
+                                            var range = quill.getSelection(true);
+                                            quill.insertEmbed(range.index, 'image', data.url, Quill.sources.USER);
+                                            quill.setSelection(range.index + 1, Quill.sources.SILENT);
+                                        } else {
+                                            alert('Upload failed: ' + (data.error || 'unknown'));
+                                        }
+                                    })
+                                    .catch(function () { alert('Image upload failed.'); });
+                            };
+                            picker.click();
+                        }
                     }
                 }
             }
-        }
-    });
-
-    // Clear validation state on input
-    quill.on('text-change', function () {
-        document.getElementById('np-content-error').style.display = 'none';
-        quill.root.style.border = '';
-    });
-
-    // Load existing content (HTML or plain text)
-    var existing = document.getElementById('np-content').value.trim();
-    if (existing !== '') {
-        if (/<[a-z][\s\S]*>/i.test(existing)) {
-            quill.root.innerHTML = existing;
-        } else {
-            // Legacy plain text — convert paragraphs
-            var html = existing.split(/\n\n+/).map(function (p) {
-                return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
-            }).join('');
-            quill.root.innerHTML = html;
-        }
+        });
+    } catch (e) {
+        // Quill init failed — fall back to plain textarea
+        contentTextarea.style.display = '';
+        contentTextarea.rows = 14;
+        if (editorDiv) editorDiv.style.display = 'none';
+        return;
     }
 
-    // Sync to hidden textarea before submit, with manual validation
-    var form = document.querySelector('form');
+    // Load existing content
+    var existing = contentTextarea.value.trim();
+    if (existing !== '') {
+        quill.root.innerHTML = /<[a-z][\s\S]*>/i.test(existing)
+            ? existing
+            : existing.split(/\n\n+/).map(function (p) {
+                return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+              }).join('');
+    }
+
+    // Clear error state on type
+    quill.on('text-change', function () {
+        errEl.style.display = 'none';
+        quill.root.style.outline = '';
+    });
+
+    // Validate + sync on submit
     form.addEventListener('submit', function (e) {
         var html = quill.root.innerHTML.trim();
-        var isEmpty = html === '' || html === '<p><br></p>';
-        var errEl = document.getElementById('np-content-error');
-
-        if (isEmpty) {
+        if (html === '' || html === '<p><br></p>') {
             e.preventDefault();
             errEl.style.display = 'block';
-            quill.root.style.border = '1px solid #dc3545';
+            quill.root.style.outline = '1px solid #dc3545';
             quill.focus();
             return;
         }
-
-        errEl.style.display = 'none';
-        quill.root.style.border = '';
-        document.getElementById('np-content').value = html;
+        contentTextarea.value = html;
     });
+})();
+
+// ---- Cover image UI ----
+(function () {
+    var fileInput   = document.getElementById('cover_image_input');
+    var previewWrap = document.getElementById('cover-preview-wrap');
+    var previewImg  = document.getElementById('cover-preview-img');
+    var filenameEl  = document.getElementById('cover-filename');
+    var zone        = document.getElementById('cover-upload-zone');
+    var removeBtn   = document.getElementById('cover-remove-btn');
+    var removeInput = document.getElementById('remove_cover');
+
+    if (!fileInput || !zone) return;
+
+    zone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        zone.style.borderColor = '#555';
+        zone.style.background  = 'rgba(0,0,0,.03)';
+    });
+    zone.addEventListener('dragleave', function () {
+        zone.style.borderColor = '';
+        zone.style.background  = '';
+    });
+    zone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        zone.style.borderColor = '';
+        zone.style.background  = '';
+        var files = e.dataTransfer.files;
+        if (!files.length) return;
+        // Assign dropped file to input via DataTransfer
+        try {
+            var dt = new DataTransfer();
+            dt.items.add(files[0]);
+            fileInput.files = dt.files;
+        } catch (_) {}
+        showPreview(files[0]);
+    });
+
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files && fileInput.files[0]) {
+            showPreview(fileInput.files[0]);
+        }
+    });
+
+    function showPreview(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+            previewImg.src = ev.target.result;
+            previewWrap.style.display = '';
+            if (filenameEl) filenameEl.textContent = file.name;
+            if (removeInput) removeInput.value = '0';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function () {
+            previewWrap.style.display = 'none';
+            previewImg.src = '';
+            fileInput.value = '';
+            if (filenameEl) filenameEl.textContent = 'No image';
+            if (removeInput) removeInput.value = '1';
+        });
+    }
 })();
 </script>
 

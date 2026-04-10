@@ -35,31 +35,18 @@ if (empty($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
 }
 
 $file   = $_FILES['image'];
-$maxSize = 5 * 1024 * 1024; // 5 MB
+// Validate via getimagesize (always available, no extension required)
+$imgInfo = @getimagesize($file['tmp_name']);
+$allowedTypes = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_GIF => 'gif', IMAGETYPE_WEBP => 'webp'];
+$imgType = $imgInfo ? (int)$imgInfo[2] : 0;
 
-if ($file['size'] > $maxSize) {
-    http_response_code(400);
-    echo json_encode(['error' => 'File too large (max 5 MB)']);
-    exit;
-}
-
-// Validate MIME via finfo
-$finfo = new finfo(FILEINFO_MIME_TYPE);
-$mime  = $finfo->file($file['tmp_name']);
-$allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-if (!in_array($mime, $allowedMimes, true)) {
+if (!$imgInfo || !isset($allowedTypes[$imgType])) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid image type']);
     exit;
 }
 
-$ext = match ($mime) {
-    'image/jpeg' => 'jpg',
-    'image/png'  => 'png',
-    'image/gif'  => 'gif',
-    'image/webp' => 'webp',
-    default      => 'jpg',
-};
+$ext = $allowedTypes[$imgType];
 
 $subdir  = 'editor/' . date('Y/m');
 $saveDir = rtrim(UPLOAD_PATH, '/') . '/' . $subdir;
